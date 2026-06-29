@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.myapplication"
+    namespace = "com.ch33m5.webforcenow"
     compileSdk {
         version = release(36) {
             minorApiLevel = 1
@@ -11,7 +11,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.myapplication"
+        applicationId = "com.ch33m5.webforcenow"
         minSdk = 21
         targetSdk = 36
         versionCode = 1

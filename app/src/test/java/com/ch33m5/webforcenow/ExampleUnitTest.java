@@ -1,4 +1,4 @@
-package com.example.myapplication;
+package com.ch33m5.webforcenow;
 
 import org.junit.Test;
 
