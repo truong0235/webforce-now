@@ -1,17 +1,26 @@
 package com.ch33m5.webforcenow;
 
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import androidx.appcompat.app.AppCompatActivity;
-
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.webkit.WebSettings;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "WebforceNow";
+    private static final int REQUEST_NOTIFICATION_PERMISSION = 100;
     private WebView myWebView;
+    private boolean isInBackground;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,6 +38,8 @@ public class MainActivity extends AppCompatActivity {
         if (getSupportActionBar() != null) {
             getSupportActionBar().hide();
         }
+
+        startKeepAliveService();
 
         myWebView = (WebView) findViewById(R.id.webview);
         myWebView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
@@ -53,5 +64,113 @@ public class MainActivity extends AppCompatActivity {
         myWebView.setOverScrollMode(View.OVER_SCROLL_NEVER);
 
         myWebView.loadUrl("https://play.geforcenow.com");
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (isInBackground) {
+            isInBackground = false;
+            moveWebViewBackToActivity();
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (!isChangingConfigurations()) {
+            isInBackground = true;
+            moveWebViewToOverlay();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        Log.d(TAG, "MainActivity onDestroy");
+        KeepAliveService svc = KeepAliveService.getInstance();
+        if (svc != null) {
+            View wv = svc.removeFromOverlay();
+            if (wv != null && wv instanceof WebView) {
+                ((WebView) wv).destroy();
+            }
+        }
+        stopService(new Intent(this, KeepAliveService.class));
+        if (myWebView != null) {
+            myWebView.destroy();
+            myWebView = null;
+        }
+        super.onDestroy();
+    }
+
+    private void moveWebViewToOverlay() {
+        KeepAliveService svc = KeepAliveService.getInstance();
+        if (svc == null || myWebView == null) return;
+
+        try {
+            ViewGroup parent = (ViewGroup) myWebView.getParent();
+            if (parent != null) {
+                parent.removeView(myWebView);
+            }
+            svc.moveToOverlay(myWebView);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to move WebView to overlay", e);
+        }
+    }
+
+    private void moveWebViewBackToActivity() {
+        KeepAliveService svc = KeepAliveService.getInstance();
+        if (svc == null || myWebView == null) return;
+
+        try {
+            View webView = svc.removeFromOverlay();
+            if (webView != null) {
+                ViewGroup container = findViewById(R.id.webview_container);
+                FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.MATCH_PARENT,
+                        FrameLayout.LayoutParams.MATCH_PARENT
+                );
+                container.addView(webView, lp);
+                Log.d(TAG, "WebView moved back to activity");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to move WebView back to activity", e);
+        }
+    }
+
+    private void startKeepAliveService() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                Log.d(TAG, "Requesting POST_NOTIFICATIONS permission");
+                ActivityCompat.requestPermissions(this,
+                        new String[]{android.Manifest.permission.POST_NOTIFICATIONS},
+                        REQUEST_NOTIFICATION_PERMISSION);
+                return;
+            }
+        }
+        launchKeepAliveService();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_NOTIFICATION_PERMISSION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.d(TAG, "Notification permission granted");
+            } else {
+                Log.w(TAG, "Notification permission denied");
+            }
+            launchKeepAliveService();
+        }
+    }
+
+    private void launchKeepAliveService() {
+        Log.d(TAG, "Starting KeepAliveService");
+        Intent serviceIntent = new Intent(this, KeepAliveService.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntent);
+        } else {
+            startService(serviceIntent);
+        }
     }
 }

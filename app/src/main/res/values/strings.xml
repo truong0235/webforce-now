@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">Webforce Now</string>
+    <string name="media_channel_name">Background Service</string>
+    <string name="media_channel_description">Keeps the app running in the background</string>
+    <string name="media_notification_text">Running in background</string>
+    <string name="overlay_channel_name">Overlay Service</string>
+    <string name="overlay_channel_description">Keeps the app running in the background</string>
+    <string name="overlay_notification_text">Running in background</string>
 </resources>
