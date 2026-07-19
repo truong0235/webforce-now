@@ -13,4 +13,5 @@
 .cxx
 **/local.properties
 **/.settings/
-**/.project/
+**/.project
+**/.classpath

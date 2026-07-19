@@ -21,6 +21,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_NOTIFICATION_PERMISSION = 100;
     private WebView myWebView;
     private boolean isInBackground;
+    private JsBridge jsBridge;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,13 +42,22 @@ public class MainActivity extends AppCompatActivity {
 
         startKeepAliveService();
 
+        jsBridge = new JsBridge();
+
         myWebView = (WebView) findViewById(R.id.webview);
         myWebView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+        myWebView.addJavascriptInterface(jsBridge, "AndroidBridge");
+        jsBridge.setWebView(myWebView);
 
         myWebView.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageFinished(WebView view, String url) {
-                Log.d(TAG, "Page finished: " + url);
+                super.onPageFinished(view, url);
+                jsBridge.injectAssets(MainActivity.this,
+                    "js/bridge.js",
+                    "js/stealth.js",
+                    "js/inject-on-load.js"
+                );
             }
         });
 
@@ -63,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
         webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         myWebView.setOverScrollMode(View.OVER_SCROLL_NEVER);
 
-        myWebView.loadUrl("https://play.geforcenow.com");
+        myWebView.loadUrl("https://play.geforcenow.com/mall/#/layout/games");
     }
 
     @Override
@@ -99,6 +109,9 @@ public class MainActivity extends AppCompatActivity {
             myWebView.destroy();
             myWebView = null;
         }
+        if (jsBridge != null) {
+            jsBridge.clearWebView();
+        }
         super.onDestroy();
     }
 
@@ -111,6 +124,9 @@ public class MainActivity extends AppCompatActivity {
             if (parent != null) {
                 parent.removeView(myWebView);
             }
+            myWebView.setLayerType(View.LAYER_TYPE_NONE, null);
+            myWebView.getSettings().setOffscreenPreRaster(false);
+            myWebView.onResume();
             svc.moveToOverlay(myWebView);
         } catch (Exception e) {
             Log.e(TAG, "Failed to move WebView to overlay", e);
@@ -124,6 +140,8 @@ public class MainActivity extends AppCompatActivity {
         try {
             View webView = svc.removeFromOverlay();
             if (webView != null) {
+                myWebView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+                myWebView.getSettings().setOffscreenPreRaster(true);
                 ViewGroup container = findViewById(R.id.webview_container);
                 FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
                         FrameLayout.LayoutParams.MATCH_PARENT,
