@@ -1,17 +1,25 @@
 package com.ch33m5.webforcenow;
 
+import android.os.SystemClock;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebView;
+
+import android.view.MotionEvent;
+import android.view.KeyEvent;
+
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
 
 public class JsBridge {
 
@@ -59,6 +67,45 @@ public class JsBridge {
             return;
         }
         mainHandler.post(() -> wv.evaluateJavascript(js, callback));
+    }
+
+    @JavascriptInterface
+    public void click(float x, float y) {
+        if (this.webView == null) {
+            Log.w(TAG, "[JsBridge] WebView is null, cannot click");
+            return;
+        }
+        new Handler(Looper.getMainLooper()).post(() -> {
+            WebView wv = this.webView;
+            if (wv == null) return;
+            long now = SystemClock.uptimeMillis();
+            MotionEvent down = MotionEvent.obtain(now, now, MotionEvent.ACTION_DOWN, x, y, 0);
+            MotionEvent up = MotionEvent.obtain(now, now + 100, MotionEvent.ACTION_UP, x, y, 0);
+            wv.dispatchTouchEvent(down);
+            wv.dispatchTouchEvent(up);
+            down.recycle();
+            up.recycle();
+            Log.d(TAG, "[JsBridge] Clicked at (" + x + ", " + y + ")");
+        });
+    }
+
+    @JavascriptInterface
+    public void click() {
+        click(10, 10);
+    }
+
+    @JavascriptInterface
+    public void keyPress() {
+        if (this.webView == null) {
+            Log.w(TAG, "[JsBridge] WebView not found, cant send key event");
+            return;
+        }
+        new Handler(Looper.getMainLooper()).post(() -> {
+            WebView wv = this.webView;
+            wv.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BUTTON_16));
+            wv.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_BUTTON_16));
+            Log.d(TAG, "[JsBridge] key sent");
+        });
     }
 
     public String loadAsset(String path, android.content.Context context) {

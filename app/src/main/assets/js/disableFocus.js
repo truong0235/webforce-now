@@ -1,15 +1,25 @@
-Object.defineProperty(document, 'hidden', { value: false, configurable: true });
-Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
-document.hasFocus = () => true;
+// Override document.visibilityState to always report "visible"
+Object.defineProperty(document, 'hidden', {
+    get: function() { return false; },
+    configurable: true
+});
 
-window.onblur = null;
-window.onfocus = null;
-document.onvisibilitychange = null;
+Object.defineProperty(document, 'visibilityState', {
+    get: function() { return 'visible'; },
+    configurable: true
+});
 
-const blockEvents = ['visibilitychange', 'blur', 'focus', 'focusout', 'fullscreenchange'];
-const origAddEventListener = EventTarget.prototype.addEventListener;
-EventTarget.prototype.addEventListener = function(type, listener, options) {
-    if (!blockEvents.includes(type)) {
-        return origAddEventListener.call(this, type, listener, options);
-    }
-};
+// Override hasFocus to always return true
+Document.prototype.hasFocus = function() { return true; };
+
+// Prevent visibilitychange events with "hidden" from propagating
+document.addEventListener('visibilitychange', function(e) {
+    e.stopImmediatePropagation();
+}, true);
+
+// Override document.onvisibilitychange setter
+Object.defineProperty(document, 'onvisibilitychange', {
+    set: function() {},
+    get: function() { return null; },
+    configurable: true
+});

@@ -53,10 +53,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
+                Log.d(TAG, "Page finished: " + url);
                 jsBridge.injectAssets(MainActivity.this,
-                    "js/bridge.js",
-                    "js/stealth.js",
-                    "js/inject-on-load.js"
+                    "js/disableFocus.js",
+                    "js/init.js",
+                    "js/detectIdle.js"
                 );
             }
         });
@@ -74,6 +75,11 @@ public class MainActivity extends AppCompatActivity {
         myWebView.setOverScrollMode(View.OVER_SCROLL_NEVER);
 
         myWebView.loadUrl("https://play.geforcenow.com/mall/#/layout/games");
+    }
+    @Override
+    public void onBackPressed() {
+        if (myWebView.canGoBack())
+            myWebView.goBack();
     }
 
     @Override
