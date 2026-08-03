@@ -4,42 +4,51 @@
     if (window.__detectIdleRunning) return;
     window.__detectIdleRunning = true;
 
-    var match = "Game ending in"; //title match
+    var match = "Game ending in";
+
+    function killPopups() {
+        var selectors = ['[class*="modal"]', '[class*="overlay"]', '[class*="popup"]',
+            '[class*="dialog"]', '[class*="backdrop"]', '[class*="scrim"]'];
+        selectors.forEach(function(s) {
+            document.querySelectorAll(s).forEach(function(el) {
+                el.style.pointerEvents = "none";
+            });
+        });
+    }
+
+    function clickButton(btn) {
+        killPopups();
+        btn.style.position = "relative";
+        btn.style.zIndex = "2147483647";
+        btn.style.pointerEvents = "auto";
+        var rect = btn.getBoundingClientRect();
+        var r = window.devicePixelRatio || 1;
+        AndroidBridge.click((rect.left + rect.width / 2) * r, (rect.top + rect.height / 2) * r);
+    }
 
     function checkIdle() {
         try {
-            var title = document.title;
             var stream = document.querySelector("video#remote-video");
-            var startButton = document.querySelector('button[aria-label="Start"]'); //inital "Lets go" button
-            var continueButton = document.querySelector('button[color="accent"]'); //"back to game" button
-            if (startButton && stream) { //to make sure that its ingame, might detect same button in other area
-                startButton.style.position = "relative";
-                startButton.style.zIndex = "99999";
-                var startButtonCords = startButton.getBoundingClientRect();
-                AndroidBridge.click(startButtonCords.left + startButtonCords.width /2 , startButtonCords.top + startButtonCords.height / 2);
-                AndroidBridge.log("[detectIdle]" + "StartButton pressed");
+            var title = document.title;
+            var startBtn = document.querySelector('button[aria-label="Start"]');
+            var continueBtn = Array.from(document.querySelectorAll('button'))
+                .find(function(b) { return b.innerText == 'BACK TO GAME'; });
 
-            }
-            if (continueButton && stream) {
-                continueButton.style.position = "relative";
-                continueButton.style.zIndex = "99999";
-                var continueButtonCords = continueButton.getBoundingClientRect();
-                AndroidBridge.click(continueButtonCords.left + continueButtonCords.width /2 , continueButtonCords.top + continueButtonCords.height / 2);
-                AndroidBridge.log("[detectIdle]" + "ContinueButton pressed");
-
-            }
-            if (title.indexOf(match) !== -1 && stream) {
+            if (startBtn && stream) {
+                clickButton(startBtn);
+                AndroidBridge.log("[detectIdle] StartButton pressed");
+            } else if (continueBtn && stream) {
+                clickButton(continueBtn);
+                AndroidBridge.log("[detectIdle] ContinueButton pressed");
+            } else if (title.indexOf(match) !== -1 && stream) {
                 AndroidBridge.keyPress();
-                setTimeout(AndroidBridge.keyPress(), 10*1000); //send another key after 10 sec
-                AndroidBridge.log("[detectIdle]" + "Key pressed");
+                setTimeout(AndroidBridge.keyPress(), 30*1000);
+                AndroidBridge.log("[detectIdle] Key pressed");
             }
         } catch (e) {
-            AndroidBridge.log("[detectIdle]" + "Error: " + e);
+            AndroidBridge.log("[detectIdle] Error: " + e);
         }
     }
 
-    setInterval(checkIdle, 10*1000); //10 secs
-
-    //setInterval(checkIdle, 1*60*1000); //1 min
-    //setInterval(checkIdle, 5*60*1000); //5 mins
+    setInterval(checkIdle, 10 * 1000);
 }());
