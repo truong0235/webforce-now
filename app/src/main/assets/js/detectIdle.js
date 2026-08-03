@@ -4,26 +4,30 @@
     if (window.__detectIdleRunning) return;
     window.__detectIdleRunning = true;
 
-    var match = "Game ending in";
+    var match = "Game ending in"; //title match
 
     function checkIdle() {
         try {
             var title = document.title;
             var stream = document.querySelector("video#remote-video");
-            //var startButton = document.querySelector('button[aria-label="Start"]'); //inital "Lets go" button
-            //var continueButton = document.querySelector('button[color="accent"]'); //"back to game" button
-            //if (startButton && stream) { //to make sure that its ingame, might detect same button in other area
-            //    var startButtonCords = startButton.getBoundingClientRect();
-            //    AndroidBridge.click(startButtonCords.left + startButtonCords.width /2 , startButtonCords.top + startButtonCords.height / 2);
-            //    AndroidBridge.log("[detectIdle]" + "StartButton pressed");
+            var startButton = document.querySelector('button[aria-label="Start"]'); //inital "Lets go" button
+            var continueButton = document.querySelector('button[color="accent"]'); //"back to game" button
+            if (startButton && stream) { //to make sure that its ingame, might detect same button in other area
+                startButton.style.position = "relative";
+                startButton.style.zIndex = "99999";
+                var startButtonCords = startButton.getBoundingClientRect();
+                AndroidBridge.click(startButtonCords.left + startButtonCords.width /2 , startButtonCords.top + startButtonCords.height / 2);
+                AndroidBridge.log("[detectIdle]" + "StartButton pressed");
 
-            //}
-            //if (continueButton && stream) {
-            //    var continueButtonCords = continueButton.getBoundingClientRect();
-            //    AndroidBridge.click(continueButtonCords.left + continueButtonCords.width /2 , continueButtonCords.top + continueButtonCords.height / 2);
-            //    AndroidBridge.log("[detectIdle]" + "ContinueButton pressed");
+            }
+            if (continueButton && stream) {
+                continueButton.style.position = "relative";
+                continueButton.style.zIndex = "99999";
+                var continueButtonCords = continueButton.getBoundingClientRect();
+                AndroidBridge.click(continueButtonCords.left + continueButtonCords.width /2 , continueButtonCords.top + continueButtonCords.height / 2);
+                AndroidBridge.log("[detectIdle]" + "ContinueButton pressed");
 
-            //}
+            }
             if (title.indexOf(match) !== -1 && stream) {
                 AndroidBridge.keyPress();
                 setTimeout(AndroidBridge.keyPress(), 10*1000); //send another key after 10 sec
