@@ -130,8 +130,6 @@ public class MainActivity extends AppCompatActivity {
             if (parent != null) {
                 parent.removeView(myWebView);
             }
-            myWebView.setLayerType(View.LAYER_TYPE_NONE, null);
-            myWebView.getSettings().setOffscreenPreRaster(false);
             myWebView.onResume();
             svc.moveToOverlay(myWebView);
         } catch (Exception e) {
@@ -146,8 +144,6 @@ public class MainActivity extends AppCompatActivity {
         try {
             View webView = svc.removeFromOverlay();
             if (webView != null) {
-                myWebView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
-                myWebView.getSettings().setOffscreenPreRaster(true);
                 ViewGroup container = findViewById(R.id.webview_container);
                 FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
                         FrameLayout.LayoutParams.MATCH_PARENT,

@@ -83,22 +83,23 @@ public class KeepAliveService extends Service {
                 type = WindowManager.LayoutParams.TYPE_PHONE;
             }
 
-            int size = dpToPx(1);
-
             overlayParams = new WindowManager.LayoutParams(
-                    size,
-                    size,
+                    WindowManager.LayoutParams.MATCH_PARENT,
+                    WindowManager.LayoutParams.MATCH_PARENT,
                     type,
                     WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
                             | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-                            | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                            | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
+                            | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
                     PixelFormat.TRANSLUCENT
             );
             overlayParams.gravity = Gravity.TOP | Gravity.START;
+            overlayParams.alpha = 0f;
 
             overlayContainer = new FrameLayout(this);
+            overlayContainer.setBackgroundColor(0x00000000);
             windowManager.addView(overlayContainer, overlayParams);
-            Log.d(TAG, "Overlay added (1dp, non-touchable)");
+            Log.d(TAG, "Overlay added (full-size, invisible, non-touchable)");
         } catch (Exception e) {
             Log.e(TAG, "Failed to add overlay", e);
             overlayContainer = null;
