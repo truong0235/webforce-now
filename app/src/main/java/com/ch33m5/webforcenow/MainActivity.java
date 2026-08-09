@@ -57,7 +57,8 @@ public class MainActivity extends AppCompatActivity {
                 jsBridge.injectAssets(MainActivity.this,
                     "js/disableFocus.js",
                     "js/init.js",
-                    "js/detectIdle.js"
+                    "js/detectIdle.js",
+                    "js/handleQueue.js"
                 );
             }
         });

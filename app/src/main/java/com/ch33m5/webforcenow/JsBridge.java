@@ -4,7 +4,6 @@ import android.os.SystemClock;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebView;
@@ -12,7 +11,9 @@ import android.webkit.WebView;
 import android.view.MotionEvent;
 import android.view.KeyEvent;
 
-import android.widget.Toast;
+import android.content.Context;
+import android.content.res.AssetFileDescriptor;
+import android.media.MediaPlayer;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,11 +26,13 @@ public class JsBridge {
 
     private static final String TAG = "WebforceNow";
     private WebView webView;
+    private Context context;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     public void setWebView(WebView webView) {
         this.webView = webView;
+        this.context = webView.getContext();
     }
 
     public void clearWebView() {
@@ -50,6 +53,25 @@ public class JsBridge {
                 break;
         }
     }
+
+
+    @JavascriptInterface
+    public void playSound() {
+        if (context == null) return;
+        try {
+            AssetFileDescriptor afd = context.getAssets().openFd("audio/nokia-ringtone.mp3");
+            MediaPlayer mp = new MediaPlayer();
+            mp.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+            afd.close();
+            mp.prepare();
+            mp.setOnCompletionListener(MediaPlayer::release);
+            mp.start();
+        } catch (Exception e) {
+            Log.e(TAG, "playSound failed", e);
+        }
+    }
+
+
 
     @JavascriptInterface
     public void log(String message) {
