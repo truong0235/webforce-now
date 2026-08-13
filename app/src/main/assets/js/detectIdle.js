@@ -7,20 +7,27 @@
     var match = "Game ending in";
 
     function killPopups() {
-        var selectors = ['[class*="modal"]', '[class*="overlay"]', '[class*="popup"]',
-            '[class*="dialog"]', '[class*="backdrop"]', '[class*="scrim"]'];
-        selectors.forEach(function(s) {
-            document.querySelectorAll(s).forEach(function(el) {
-                el.style.pointerEvents = "none";
-            });
-        });
+    //    var selectors = ['[class*="modal"]', '[class*="overlay"]', '[class*="popup"]',
+    //        '[class*="dialog"]', '[class*="backdrop"]', '[class*="scrim"]'];
+    //    selectors.forEach(function(s) {
+    //        document.querySelectorAll(s).forEach(function(el) {
+    //            el.style.pointerEvents = "none";
+    //        });
+    //    });
+        let overlay = document.querySelector("mat-snack-bar-container");
+        if (overlay) {
+            overlay.hidden = true;
+        }
+        else {
+            console.log("[detectIdle] cant find overlay");
+        }
     }
-
     function clickButton(btn) {
-        killPopups();
-        btn.style.position = "relative";
-        btn.style.zIndex = "2147483647";
-        btn.style.pointerEvents = "auto";
+        //killPopups();
+        //var outer = btn.parentElement;
+        //outer.style.position = "relative";
+        //outer.style.zIndex = "2147483647";
+        //outer.style.pointerEvents = "auto";
         var rect = btn.getBoundingClientRect();
         var r = window.devicePixelRatio || 1;
         AndroidBridge.click((rect.left + rect.width / 2) * r, (rect.top + rect.height / 2) * r);
@@ -34,21 +41,22 @@
             var continueBtn = Array.from(document.querySelectorAll('button'))
                 .find(function(b) { return b.innerText == 'BACK TO GAME'; });
 
-            if (startBtn && stream) {
-                clickButton(startBtn);
-                AndroidBridge.log("[detectIdle] StartButton pressed");
-            } else if (continueBtn && stream) {
+            //if (startBtn && stream) {
+            //    clickButton(startBtn);
+            //    console.log("[detectIdle] StartButton pressed");
+            } if (continueBtn && stream) {
                 clickButton(continueBtn);
-                AndroidBridge.log("[detectIdle] ContinueButton pressed");
-            } else if (title.indexOf(match) !== -1 && stream) {
+                console.log("[detectIdle] ContinueButton pressed");
+            //} else if (title.indexOf(match) !== -1 && stream) {
+            } else if (stream) {
                 AndroidBridge.keyPress();
-                setTimeout(AndroidBridge.keyPress(), 30*1000);
-                AndroidBridge.log("[detectIdle] Key pressed");
+                console.log("[detectIdle] Keep in session button pressed");
             }
         } catch (e) {
-            AndroidBridge.log("[detectIdle] Error: " + e);
+            console.log("[detectIdle] Error: " + e);
         }
     }
 
-    setInterval(checkIdle, 10 * 1000);
+    setInterval(checkIdle, 1 * 60 * 1000); //1 min
+    //setInterval(checkIdle, 500);
 }());
