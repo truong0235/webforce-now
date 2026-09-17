@@ -28,5 +28,5 @@ jobs:
           ./app/build/outputs/apk/debug/app-debug.apk
         name: test release
         tag: all
-        bodyFile: ${{ github.workspace }}-CHANGELOG.txt
+        #bodyFile: ${{ github.workspace }}-CHANGELOG.txt
         allowUpdates: true
